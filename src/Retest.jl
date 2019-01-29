@@ -33,17 +33,23 @@ end
 macro itest(expr)
     aux(x) = deepcopy(x)
     aux(e::Expr) = if e.head == :macrocall
-        Expr(e.head, e.args[1:2]..., aux.(filter(x->!isa(x, LineNumberNode), e.args[3:end]))...)
+        Expr(e.head, e.args[1], nothing, aux.(filter(x->!isa(x, LineNumberNode), e.args[3:end]))...)
     else
         Expr(e.head, aux.(filter(x->!isa(x, LineNumberNode), e.args))...)
+    end
+
+    expr2 = if expr.head == :block
+        expr
+    else
+        quote $expr end
     end
 
     quote
         println()
         println("Interactive test:")
-        $(Meta.quot(aux(expr))) |> display
+        $(Meta.quot(aux(expr2))) |> display
         println()
-        $(esc(expr))            |> display
+        $(esc(expr)) |> display
         println()
     end
 end

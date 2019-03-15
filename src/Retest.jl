@@ -4,21 +4,22 @@ export @retest, @itest
 
 macro retest(dir)
     quote
-        using Revise
-        using Jive
-
+        import Revise
+        import Jive
+        import REPL
         import REPL.Terminals
         terminal = Terminals.TTYTerminal("", stdin, stdout, stderr)
 
-        watch($dir; sources=[normpath(joinpath($dir, "..", "src"))]) do path
+        Jive.watch($dir; sources=[normpath(joinpath($dir, "..", "src"))]) do path
             fname = splitdir(path)[end]
             startswith(fname, ".#") && return
             endswith(fname, "~")    && return
 
             Terminals.clear(terminal)
             @info "File changed" path
-            revise()
+            Revise.revise()
             include("runtests.jl")
+            print(REPL.JULIA_PROMPT)
         end
 
         try

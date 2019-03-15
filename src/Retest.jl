@@ -19,7 +19,7 @@ macro retest(dir)
             @info "File changed" path
             Revise.revise()
             include("runtests.jl")
-            print(REPL.JULIA_PROMPT)
+            REPL.LineEdit.refresh_line(Base.active_repl.mistate)
         end
 
         try

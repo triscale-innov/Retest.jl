@@ -1,6 +1,6 @@
 module Retest
 
-export @retest, @itest
+export @retest, @itest, restart
 
 macro retest(dir)
     quote
@@ -53,6 +53,11 @@ macro itest(expr)
         $(esc(expr)) |> display
         println()
     end
+end
+
+function restart()
+    atexit(()->run(`julia --color=yes -qi retest.jl`))
+    exit()
 end
 
 end # module

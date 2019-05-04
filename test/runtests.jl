@@ -1,3 +1,5 @@
 using Test
 
-@test 1 == 1
+@testset "Retest" begin
+    @test 1 == 1
+end

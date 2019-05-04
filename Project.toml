@@ -7,3 +7,9 @@ version = "0.1.0"
 Jive = "ba5e3d4b-8524-549f-bc71-e76ad9e9deed"
 REPL = "3fa0cd96-eef1-5676-8a61-b3b8758bbffb"
 Revise = "295af30f-e4ad-537b-8983-00126c2a3abe"
+
+[extras]
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+
+[targets]
+test = ["Test"]

@@ -33,6 +33,12 @@ macro retest(dir)
     end |> esc
 end
 
+"""
+    @itest expr
+
+Display `expr`, evaluate its result, and display it as if it had been entered in
+the REPL.
+"""
 macro itest(expr)
     aux(x) = deepcopy(x)
     aux(e::Expr) = if e.head == :macrocall
@@ -57,6 +63,11 @@ macro itest(expr)
     end
 end
 
+"""
+    restart()
+
+Rerun `retest.jl` in a fresh REPL.
+"""
 function restart()
     Jive.stop(Jive.watch)
     atexit(()->run(`julia --color=yes -qi retest.jl`))

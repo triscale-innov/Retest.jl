@@ -5,7 +5,7 @@
 ## Installation
 
 ```
-] add https://github.com/ffevotte/Retest.jl.git
+] add https://github.com/triscale-innov/Retest.jl.git
 ```
 
 ## Usage

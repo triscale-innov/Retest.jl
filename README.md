@@ -5,7 +5,7 @@
 ## Installation
 
 ```
-] add https://git.morditux.net/ffevotte/Retest.jl.git
+] add https://github.com/ffevotte/Retest.jl.git
 ```
 
 ## Usage
@@ -41,6 +41,10 @@ a `Project/test/retest.jl` script file with the following contents:
 exec julia --project --color=yes -qi retest.jl
 =#
 
+using Pkg
+cd(@__DIR__)
+Pkg.activate("..")
+
 using Retest
 @retest(@__DIR__)
 ```
@@ -49,6 +53,13 @@ Running this script will open a Julia REPL in which your tests results will be
 updated as source files change in the project:
 
 ```
-sh$ cd Project/test
+sh$ cd path/to/Project/test
 sh$ ./retest.jl
+```
+
+Alternatively, just `include` this script from a running REPL (*e.g.* in Juno or
+VScode):
+
+```
+julia> include("path/to/Project/test/retest.jl")
 ```

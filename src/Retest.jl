@@ -1,6 +1,26 @@
+"""
+# Retest
+
+This module implements useful features to watch all source files in a project,
+including an "entry point" script, which is re-run each time something changes.
+
+The first step to use this package is to issue the `start` command:
+
+    using Retest
+    Retest.start("path/to/entry_point")
+
+
+When in a Retest REPL, the following function are available for interactive use:
+- `restart`: stop the current interactive Retest REPL and start a new one
+- `pause`: temporarily pause file watching
+- `resume`: resume file watching after it has been paused
+- `trigger`: trigger a re-run of the entry point script
+- `status`: display a list of currently watched files
+
+See the individual documentation for each of these functions for additional
+information.
+"""
 module Retest
-
-
 export @itest
 
 """

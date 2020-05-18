@@ -1,37 +1,79 @@
 module Retest
 
-using Jive
-export @retest, @itest, restart
-
-macro retest(dir)
-    quote
-        import Revise
-        import Jive
-        import REPL
-
-        let terminal = REPL.Terminals.TTYTerminal("", stdin, stdout, stderr)
-            REPL.Terminals.clear(terminal)
-            Jive.watch($dir; sources=[normpath(joinpath($dir, "..", "src"))]) do path
-                fname = splitdir(path)[end]
-                startswith(fname, ".#") && return
-                endswith(fname, "~")    && return
-
-                REPL.Terminals.clear(terminal)
-                @info "File changed" path
-                Revise.revise()
-                include("runtests.jl")
-                REPL.LineEdit.refresh_line(Base.active_repl.mistate)
-            end
-        end
-
-        try
-            include("runtests.jl")
-        catch e
-            msg = e.error
-            @warn "Tests failed" msg
-        end
-    end |> esc
+# Tests will be evaluated in this module
+module SandBox
+using Retest
 end
+
+include("Internal.jl")
+
+export @itest
+# export restart, pause, resume, trigger, status, reload
+
+"""
+    start(entry_point="runtests.jl")
+
+Start a new interactive Retest REPL, in which both the current project and the
+provided entry_point will be watched for changes. Every time a watched source
+file changes, the script provided by the entry_point gets run again.
+"""
+start(entry_point="retest.jl") = Internal.start(entry_point)
+
+
+"""
+    pause()
+
+Stop watching files and re-running tests. Retest can be resumed using the
+`Retest.resume()` function.
+"""
+pause() = Internal.pause()
+
+
+"""
+    resume()
+
+Resume the Retest task after it has been stopped using `Retest.pause()`.
+"""
+resume() = Internal.resume()
+
+
+"""
+    trigger()
+
+Trigger re-running the tests, as if a change had been detected in one of the
+watched files.
+"""
+trigger() = Internal.trigger()
+
+
+"""
+    status()
+
+See the list of currently watched files, and the status of tasks watching them.
+"""
+status() = Internal.status()
+
+
+"""
+    restart()
+
+Stop the current Retest REPL, and start a new one. This is useful in order to
+account for changes that Revise cannot track.
+"""
+restart() = Internal.restart()
+
+
+"""
+    reload()
+
+Pause the current Retest REPL, and immediately resume it. This is only useful
+for testing Retest itself.
+"""
+function reload()
+    Internal.pause()
+    Internal.resume()
+end
+
 
 """
     @itest expr
@@ -61,18 +103,6 @@ macro itest(expr)
         $(esc(expr)) |> display
         println()
     end
-end
-
-"""
-    restart()
-
-Rerun `retest.jl` in a fresh REPL.
-"""
-function restart()
-    Jive.stop(Jive.watch)
-    atexit(()->run(`julia --color=yes -qi retest.jl`))
-    println("Restarting...")
-    exit()
 end
 
 end # module

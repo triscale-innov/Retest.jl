@@ -1,14 +1,20 @@
 #!/bin/bash
 #=
-exec julia -O3 --color=yes -qi "${BASH_SOURCE[0]}"
+exec julia --project -e "using Retest; Retest.start()"
 =#
 
-using Pkg
-cd(@__DIR__)
-Pkg.activate("..")
-
 using Retest
-@retest(@__DIR__)
+cd(@__DIR__)
+try
+    include("runtests.jl")
+catch err
+    showerror(stderr, err)
+    print(stderr, "\n")
+end
+
+@itest begin
+    1 + 1
+end
 
 # Local Variables:
 # mode: julia

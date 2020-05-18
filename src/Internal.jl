@@ -5,31 +5,31 @@ import Revise
 import Dates
 import REPL
 
-import ..SandBox
-
 struct Event
     typ :: Symbol
     val :: String
 end
 Event(typ) = Event(typ, "")
 
-const PACKAGE     = Module[]
+const MODULES     = Module[]
 const ENTRY_POINT = Ref("")
 const FILES       = Set{String}()
 const TASKS       = Dict{String,Task}()
 const CHANNEL     = Channel{Event}()
 
-module Sandbox
+function start(entry_point::String; inner::Bool=false)
+    if length(MODULES) > 0
+        error("[Retest] This session has already been configured.\n"*
+              "  Run `Retest.restart()` to start a new one, or `Retest.reload()`\n"*
+              "  to reload it (potentially with a different entry point).")
+    end
 
-end
-
-function start(entry_point; inner=false)
     projname = Pkg.project().name |> Symbol
     prog = quote
         using Revise
         using Retest
         using $projname
-        Retest.Internal.retest($projname, $entry_point)
+        Retest.Internal.retest($entry_point, $projname, Main)
     end |> string
 
     julia = Base.julia_cmd()[1]
@@ -56,18 +56,24 @@ function restart()
     start(ENTRY_POINT[] ; inner=true)
 end
 
-function retest(package, entry_point)
-    empty!(PACKAGE); push!(PACKAGE, package)
+function retest(entry_point :: String,
+                package     :: Module,
+                target      :: Module)
     ENTRY_POINT[] = abspath(entry_point)
+
+    empty!(MODULES);
+    push!(MODULES, package)
+    push!(MODULES, target)
     resume()
 end
 
 function resume()
-    # retest should have been run beforehand
-    @assert length(PACKAGE) == 1
-    package = PACKAGE[1]
+    @assert(length(MODULES) == 2,
+            "Retest.retest should have been called beforehand")
+    package = MODULES[1]
 
-    @assert ENTRY_POINT[] != ""
+    @assert(ENTRY_POINT[] != "",
+            "Retest.retest should have been called beforehand")
     entry_point = ENTRY_POINT[]
 
     if isactive()
@@ -112,7 +118,7 @@ function main_loop(package, entry_point)
             isactive(file) || (TASKS[file] = @async watch_file(file))
         end
 
-        # GC: stop tracking unnecessary done tasks
+        # GC: stop tracking unnecessary tasks when they're done
         for file in keys(TASKS)
             file == ""    && continue
             file in FILES && continue
@@ -166,6 +172,10 @@ function isactive(key="")
 end
 
 function include_entry_point()
+    @assert(length(MODULES) == 2,
+            "Retest.retest should have been called beforehand")
+    target = MODULES[2]
+
     i = length(Revise.included_files)
     empty!(FILES)
 
@@ -173,7 +183,7 @@ function include_entry_point()
         Revise.revise()
         quote
             include($(ENTRY_POINT[]))
-        end |> SandBox.eval
+        end |> target.eval
     catch err
         @warn "[Retest] Error" err
     end

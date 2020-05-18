@@ -1,14 +1,7 @@
 module Retest
 
-# Tests will be evaluated in this module
-module SandBox
-using Retest
-end
-
-include("Internal.jl")
 
 export @itest
-# export restart, pause, resume, trigger, status, reload
 
 """
     start(entry_point="runtests.jl")
@@ -65,12 +58,16 @@ restart() = Internal.restart()
 
 """
     reload()
+    reload(entry_point)
 
-Pause the current Retest REPL, and immediately resume it. This is only useful
-for testing Retest itself.
+Pause the current Retest REPL, and immediately resume it. If `entry_point` is
+provided, it is used in the resumed REPL.
 """
-function reload()
+function reload(entry_point="")
     Internal.pause()
+    if entry_point != ""
+        Internal.ENTRY_POINT[] = abspath(entry_point)
+    end
     Internal.resume()
 end
 
@@ -104,5 +101,8 @@ macro itest(expr)
         println()
     end
 end
+
+
+include("Internal.jl")
 
 end # module
